@@ -6,7 +6,7 @@ const { downloadCSV, processCSV } = require('./index'); // Import the functions 
 
 
 const app = express();
-const port = 4000;
+const port = 3000;
 
 app.get('/', (req, res) => {
   const sampleJson = {
@@ -14,7 +14,8 @@ app.get('/', (req, res) => {
     endpoints: {
       csv: "/ring.csv",
       download: "/ring_download_csv"
-    }
+    },
+    author: "Admirise GmbH"
   };
   res.json(sampleJson)
 })
