@@ -40,7 +40,7 @@ const processCSV = (inputFilePath, outputFilePath) => {
       .pipe(csv({ separator: ';' }))
       .on('data', (data) => {
         if (data['Kategorie_Ebene1'] === 'Ringe') {
-          excludeColumns.forEach(column => delete data[column]);
+          //excludeColumns.forEach(column => delete data[column]);
           data['Hauptmaterial_Modell'] = `${data['Hauptmaterial']}_${data['Modell']}_${data['Legierung']}_${data['Legierungsgewicht']}_${data['Anzahl Steine']}_${data['Farbstein Caratur']}_${data['Caratur']}_${data['Breite']}`;
 
           const variationParent = `${data['Hauptmaterial']}_${data['Modell']}_${data['Legierung']}_${data['Legierungsgewicht']}_${data['Anzahl Steine']}_${data['Farbstein Caratur']}_${data['Caratur']}_${data['Breite']}`;

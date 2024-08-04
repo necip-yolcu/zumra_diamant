@@ -12,7 +12,7 @@ app.get('/', (req, res) => {
   const sampleJson = {
     message: "Welcome to Zumra Diamant API",
     endpoints: {
-      csv: "/ring.csv",
+      csv: "/ring_display_csv",
       download: "/ring_download_csv"
     },
     author: "Admirise GmbH"
@@ -24,7 +24,7 @@ app.get('/ring_download_csv', async (req, res) => {
   try {
     await downloadCSV();
     await processCSV('./items_dg_40.csv', './ringe_category_items.csv');
-    res.sendFile('./ringe_category_items.csv', { root: __dirname },  (err) => {
+    res.download('./ringe_category_items.csv', 'ringe_category_items.csv', (err) => {
       if (err) {
         res.status(500).send(`Error sending file: ${err.message}`);
       }
@@ -35,7 +35,7 @@ app.get('/ring_download_csv', async (req, res) => {
 });
 
 // Route to serve the CSV file as HTML
-app.get('/ring.csv', async (req, res) => {
+app.get('/ring_display_csv', async (req, res) => {
   const results = [];
 
   try {
@@ -46,7 +46,7 @@ app.get('/ring.csv', async (req, res) => {
       .pipe(csv({ separator: ';' }))
       .on('data', (data) => results.push(data))
       .on('end', () => {
-        res.json(results);
+        res.send(results);
       }).on('error', (err) => {
         res.status(500).send(`Error reading file: ${err.message}`);
       });
