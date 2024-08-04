@@ -1,4 +1,14 @@
 {
+  "name": "zumra_diamond_ring",
+  "version": "1.0.0",
+  "description": "Zumra Diamond Ring Node.js Application",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Admirise GmbH",
+  "license": "ISC",
   "dependencies": {
     "basic-ftp": "^5.0.5",
     "csv-parser": "^3.0.0",
@@ -7,15 +17,12 @@
     "ftp": "^0.3.10",
     "ftps": "^1.2.0"
   },
-  "name": "zumra_diamond_node",
-  "version": "1.0.0",
-  "main": "index.js",
   "devDependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  "keywords": [
+    "zumra",
+    "diamond",
+    "ring",
+    "node",
+    "api"
+  ]
 }

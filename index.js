@@ -40,110 +40,12 @@ const processCSV = (inputFilePath, outputFilePath) => {
       .pipe(csv({ separator: ';' }))
       .on('data', (data) => {
         if (data['Kategorie_Ebene1'] === 'Ringe') {
-          //excludeColumns.forEach(column => delete data[column]);
-          data['Hauptmaterial_Modell_Legierung'] = `${data['Hauptmaterial']}_${data['Modell']}_${data['Legierung']}`;
-
-          const variationParent = `${data['Hauptmaterial']}_${data['Modell']}_${data['Legierung']}`;
-          const ringSize = parseInt(data['Ringgr��e'], 10);
-          const price = parseFloat(data['UVP']);
-
-          if (!variationGroups[variationParent]) {
-            variationGroups[variationParent] = {
-              items: [],
-              maxPrice: price
-            };
-          }
-
-          variationGroups[variationParent].items.push(data);
-          if (price > variationGroups[variationParent].maxPrice) {
-            variationGroups[variationParent].maxPrice = price;
-          }
-
-        }
-      })
-      .on('end', () => {
-        let cnt = 0
-        for (const parent in variationGroups) {
-          const group = variationGroups[parent];
-          //console.log("grooup: ", group.items.length)
-          const existingSizes = group.items.map(item => parseInt(item['Ringgr��e'], 10));
-          const maxPrice = group.maxPrice;
-
-          for (let size = 48; size <= 60; size++) {
-            if (!existingSizes.includes(size)) {
-              const newItem = { ...group.items[0] };
-              newItem['Ringgr��e'] = size.toString();
-              newItem['UVP'] = maxPrice.toString();
-
-              // Update 'Lang Artikelbezeichnung'
-              const description = newItem['Lang Artikelbezeichnung'];
-              const newDescription = description.replace(/Weite:\d+/, `Weite:${size}`);
-              newItem['Lang Artikelbezeichnung'] = newDescription;
-              
-              // Update 'Englisch Lang Artikelbezeichnung'
-              const engDescription = newItem['Englisch Lang Artikelbezeichnung'];
-              const newEngDescription = engDescription.replace(/width:\d+/, `width:${size}`);
-              newItem['Englisch Lang Artikelbezeichnung'] = newEngDescription;
-              
-              group.items.push(newItem);
-            }
-          }
-          //group.items.push({});
-          //console.log("number_group: ", group.items.length)
-
-          ringeItems.push(...group.items);
-          cnt++;
-        }
-        console.log(`Processed ${cnt} ring categories`)
-
-        stringify(ringeItems, { header: true, delimiter: ';' }, (err, output) => {
-          if (err) {
-            reject(err);
-          } else {
-            fs.writeFile(outputFilePath, output, (err) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve(`Filtered "Ringe" category items have been written to ${outputFilePath}`);
-              }
-            });
-          }
-        });
-      })
-      .on('error', (error) => {
-        reject(error);
-      });
-  });
-};
-
-const processCSVWithBlanks = (inputFilePath, outputFilePath) => {
-  const ringeItems = [];
-  const variationGroups = {};
-
-  return new Promise((resolve, reject) => {
-    fs.createReadStream(inputFilePath)
-      .pipe(csv({ separator: ';' }))
-      .on('data', (data) => {
-        if (data['Kategorie_Ebene1'] === 'Ringe') {
           excludeColumns.forEach(column => delete data[column]);
-          //data['Hauptmaterial_Modell'] = `${data['Hauptmaterial']}_${data['Modell']}_${data['Legierung']}`;
-          data['Hauptmaterial_Modell'] = `${data['Hauptmaterial']}_${data['Modell']}`;
+          data['Hauptmaterial_Modell'] = `${data['Hauptmaterial']}_${data['Modell']}_${data['Legierung']}_${data['Legierungsgewicht']}_${data['Anzahl Steine']}_${data['Farbstein Caratur']}_${data['Caratur']}_${data['Breite']}`;
 
-          //const variationParent = `${data['Hauptmaterial']}_${data['Modell']}_${data['Legierung']}`;
-          const variationParent = `${data['Hauptmaterial']}_${data['Modell']}`;
-          const ringSize = parseInt(data['Ringgr��e'], 10);
+          const variationParent = `${data['Hauptmaterial']}_${data['Modell']}_${data['Legierung']}_${data['Legierungsgewicht']}_${data['Anzahl Steine']}_${data['Farbstein Caratur']}_${data['Caratur']}_${data['Breite']}`;
           const price = parseFloat(data['UVP']); //TODO {einkaufspreis[1]} another price
 
-          // Update 'Lang Artikelbezeichnung'
-          const description = newItem['Lang Artikelbezeichnung'];
-          const newDescription = description.replace(/Weite:\d+/, `Weite:${size}`);
-          newItem['Lang Artikelbezeichnung'] = newDescription;
-          
-          // Update 'Englisch Lang Artikelbezeichnung'
-          const engDescription = newItem['Englisch Lang Artikelbezeichnung'];
-          const newEngDescription = engDescription.replace(/width:\d+/, `width:${size}`);
-          newItem['Englisch Lang Artikelbezeichnung'] = newEngDescription;
-
           if (!variationGroups[variationParent]) {
             variationGroups[variationParent] = {
               items: [],
@@ -158,118 +60,72 @@ const processCSVWithBlanks = (inputFilePath, outputFilePath) => {
         }
       })
       .on('end', () => {
+        let say = 0;
+        let seenCmb = 0;
+
+        const seenCombinations = new Set();
+        const seenCombinations2 = new Set();
         for (const parent in variationGroups) {
           const group = variationGroups[parent];
-          const existingSizes = group.items.map(item => parseInt(item['Ringgr��e'], 10));
-          const maxPrice = group.maxPrice;
 
-          group.items.push({});
-
-          ringeItems.push(...group.items);
-        }
-
-        stringify(ringeItems, { header: true, delimiter: ';' }, (err, output) => {
-          if (err) {
-            reject(err);
-          } else {
-            fs.writeFile(outputFilePath, output, (err) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve(`Filtered "Ringe" category items have been written to ${outputFilePath}`);
+          const uniqueItems = group.items.filter(item => {
+            if (item.UVP !== undefined) {
+              const combinationPrice = `${item.UVP}_${item['Kurz Artikelbezeichnung']}_${item['Ringgr��e']}_${item['Hauptmaterial']}_${item['Modell']}_${item['Legierung']}_${item['Legierungsgewicht']}_${item['Anzahl Steine']}_${item['Farbstein Caratur']}_${item['Caratur']}`
+              
+              if (!seenCombinations.has(combinationPrice)) {
+                seenCombinations.add(combinationPrice);
+                return true;
               }
-            });
-          }
-        });
-      })
-      .on('error', (error) => {
-        reject(error);
-      });
-  });
-};
+              else {
+                seenCmb++;
+              }
 
-const processCSV2 = (inputFilePath, outputFilePath) => {
-  const ringeItems = [];
-  const variationGroups = {};
-  const modellGroups = {};
-
-  return new Promise((resolve, reject) => {
-    fs.createReadStream(inputFilePath)
-      .pipe(csv({ separator: ';' }))
-      .on('data', (data) => {
-        if (data['Kategorie_Ebene1'] === 'Ringe') {
-          excludeColumns.forEach(column => delete data[column]);
-          data['Hauptmaterial_Modell_Legierung'] = `${data['Hauptmaterial']}_${data['Modell']}_${data['Legierung']}`;
-
-          const variationParent = `${data['Hauptmaterial']}_${data['Modell']}_${data['Legierung']}`;
-          const ringSize = parseInt(data['Ringgr��e'], 10);
-          const price = parseFloat(data['UVP']);
-
-          // Update 'Lang Artikelbezeichnung'
-          const description = newItem['Lang Artikelbezeichnung'];
-          const newDescription = description.replace(/Weite:\d+/, `Weite:${size}`);
-          newItem['Lang Artikelbezeichnung'] = newDescription;
-          
-          // Update 'Englisch Lang Artikelbezeichnung'
-          const engDescription = newItem['Englisch Lang Artikelbezeichnung'];
-          const newEngDescription = engDescription.replace(/width:\d+/, `width:${size}`);
-          newItem['Englisch Lang Artikelbezeichnung'] = newEngDescription;
-
-          if (!variationGroups[variationParent]) {
-            variationGroups[variationParent] = {
-              items: [],
-              maxPrice: price
-            };
-          }
-
-          variationGroups[variationParent].items.push(data);
-          if (price > variationGroups[variationParent].maxPrice) {
-            variationGroups[variationParent].maxPrice = price;
-          }
-
-          if (!modellGroups[data['Modell']]) {
-            modellGroups[data['Modell']] = {
-              items: [],
-              maxPrice: price
-            };
-          }
-
-          modellGroups[data['Modell']].items.push(data);
-          if (price > modellGroups[data['Modell']].maxPrice) {
-            modellGroups[data['Modell']].maxPrice = price;
-          }
-        }
-      })
-      .on('end', () => {
-        let cnt = 0;
-        let cnt2 = 0;
-        for (const parent in variationGroups) {
-          const group = variationGroups[parent];
-          const existingSizes = group.items.map(item => parseInt(item['Ringgr��e'], 10));
-          const maxPrice = group.maxPrice;
-
-          for (let size = 48; size <= 60; size++) {
-            if (!existingSizes.includes(size)) {
-              const newItem = { ...group.items[0] };
-              newItem['Ringgr��e'] = size.toString();
-              newItem['UVP'] = maxPrice.toString();
-              group.items.push(newItem);
             }
+            return false;
+          });
+
+          const uniqueItems2 = uniqueItems.filter(uniqueItem => {
+            const combinationPriceRing = `${uniqueItem.UVP}_${uniqueItem['Kurz Artikelbezeichnung']}_${uniqueItem['Hauptmaterial']}_${uniqueItem['Modell']}_${uniqueItem['Legierung']}_${uniqueItem['Legierungsgewicht']}_${uniqueItem['Anzahl Steine']}_${uniqueItem['Farbstein Caratur']}_${uniqueItem['Caratur']}`
+            if (!seenCombinations2.has(combinationPriceRing)) {
+              seenCombinations2.add(combinationPriceRing);
+              return true;
+            }
+            return false
+          })
+
+          const uniqueItems3 = [];
+          const maxPrices = {};
+          // Find max price for each unique combination
+          uniqueItems2.forEach(item => {
+            const combination = `${item['Kurz Artikelbezeichnung']}_${item['Ringgr��e']}_${item['Hauptmaterial']}_${item['Modell']}_${item['Legierung']}_${item['Legierungsgewicht']}_${item['Anzahl Steine']}_${item['Farbstein Caratur']}_${item['Caratur']}`;
+            const price = parseFloat(item['UVP']);
+
+            if (!maxPrices[combination] || price > maxPrices[combination].price) {
+              maxPrices[combination] = { item, price };
+            }
+          });
+
+          for (const combination in maxPrices) {
+            uniqueItems3.push(maxPrices[combination].item);
           }
-          //group.items.push({}); // Add empty line after each variation group
-          ringeItems.push(...group.items);
-          cnt++;
-        }
 
-        for (const parent in modellGroups) {
-          const group = modellGroups[parent];
-          group.items.push({}); // Add empty line after each Modell group
-          ringeItems.push(...group.items);
-          cnt2++;
-        }
+          // ürünleri gruplu görmek için.. DEV
+          /* if (uniqueItems3.length <= 1) {
+            continue;
+          } */
 
-        console.log(`Processed ${cnt} ring categories`);
-        console.log(`Processed ${cnt2} ring2 categories`);
+          uniqueItems3.forEach(item => {
+            if (item.UVP !== undefined) {
+              ringeItems.push({ ...item });
+              //DEV ringeItems.push({ price: item.UVP, ringSize: item['Ringgr��e'], krt: item['Legierungsgewicht'], Caratur: item['Caratur'], Farbstein_Caratur: item['Farbstein Caratur'], Anzahl_Steine_Diamant: item['Anzahl_Steine_Diamant'], Caratur_Diamant: item['Caratur_Diamant'], breite: item['Breite'], ...item });
+            }
+          });
+          
+          //ringeItems.push({}); //DEV
+          say++;
+        }
+        console.log("say: ", say);
+        console.log("seenCmb: ", seenCmb)
 
         stringify(ringeItems, { header: true, delimiter: ';' }, (err, output) => {
           if (err) {
@@ -293,13 +149,17 @@ const processCSV2 = (inputFilePath, outputFilePath) => {
   
 
 // Execute the function to download the CSV file and process it
-downloadCSV()
+/* downloadCSV() //DEV
+  //.then(() => processCSV(csvFilePath, './ringe_category_items_dev.csv'))
   .then(() => processCSV(csvFilePath, './ringe_category_items.csv'))
-  //.then(() => processCSV2(csvFilePath, './ringe_category_items222.csv'))
-  //.then(() => processCSVWithBlanks(csvFilePath, './ringe_category_items_blanks_2attr.csv'))
   .then((message) => {
     console.log(message);
   })
   .catch((error) => {
     console.error('Error processing CSV file:', error);
-  });
+  }); */
+
+module.exports = {
+  downloadCSV,
+  processCSV
+};
