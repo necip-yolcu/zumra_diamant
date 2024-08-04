@@ -42,7 +42,7 @@ app.get('/ring.csv', async (req, res) => {
     await downloadCSV();
     await processCSV('./items_dg_40.csv', './ringe_category_items.csv');
       
-    fs.createReadStream(csvFilePath)
+    fs.createReadStream('./ringe_category_items.csv')
       .pipe(csv({ separator: ';' }))
       .on('data', (data) => results.push(data))
       .on('end', () => {
@@ -62,7 +62,7 @@ app.get('/csv_page', (req, res) => {
   const start = (page - 1) * limit;
   const end = page * limit;
   
-  fs.createReadStream(csvFilePath)
+  fs.createReadStream('./ringe_category_items.csv')
     .pipe(csv({ separator: ';' }))
     .on('data', (data) => results.push(data))
     .on('end', () => {
